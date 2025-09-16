@@ -107,6 +107,17 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Install system dependencies (Linux)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libasound2-dev pkg-config
+
+    - name: Install system dependencies (macOS)
+      if: matrix.os == 'macos-latest'
+      run: |
+        brew install alsa-lib pkg-config
+
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
       with:
@@ -147,6 +158,17 @@ jobs:
       uses: actions/checkout@v4
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
+        fetch-depth: 0
+
+    - name: Get default branch
+      id: get_branch
+      run: |
+        DEFAULT_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@')
+        echo "branch=$DEFAULT_BRANCH" >> $GITHUB_OUTPUT
+
+    - name: Checkout default branch
+      run: |
+        git checkout ${{ steps.get_branch.outputs.branch }}
 
     - name: Update version in Cargo.toml
       run: |
@@ -161,4 +183,4 @@ jobs:
         git config --local user.name "GitHub Action"
         git add Cargo.toml
         git commit -m "Bump version to ${{ needs.create-release.outputs.version }}" || exit 0
-        git push
+        git push origin ${{ steps.get_branch.outputs.branch }}
