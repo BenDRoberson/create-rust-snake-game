@@ -1,5 +1,5 @@
 //! Integration tests for the Snake Game
-//! 
+//!
 //! These tests verify that different parts of the system work together correctly.
 //! They test the complete game flow and interactions between components.
 
@@ -30,12 +30,18 @@ mod integration_tests {
             moves += 1;
 
             // Verify game state invariants
-            assert!(game.snake.len() >= 3, "Snake should never be shorter than 3 segments");
+            assert!(
+                game.snake.len() >= 3,
+                "Snake should never be shorter than 3 segments"
+            );
             // Score is u32, so it's always >= 0
-            
+
             // Verify all snake segments are valid positions
             for segment in &game.snake {
-                assert!(segment.is_valid(), "All snake segments should be valid positions");
+                assert!(
+                    segment.is_valid(),
+                    "All snake segments should be valid positions"
+                );
             }
 
             // Verify snake segments are adjacent
@@ -78,7 +84,7 @@ mod integration_tests {
 
             // Verify game speed increases with each food eaten
             assert!(game.game_speed < initial_speed);
-            
+
             // Verify new food is not on snake
             assert!(!game.snake.contains(&game.food));
         }
@@ -94,14 +100,24 @@ mod integration_tests {
         // Move snake to different edges and test movement
         let test_cases = [
             (Position::new(0, GRID_HEIGHT / 2), Direction::Left), // Left edge
-            (Position::new(GRID_WIDTH - 1, GRID_HEIGHT / 2), Direction::Right), // Right edge
-            (Position::new(GRID_WIDTH / 2, 0), Direction::Up), // Top edge
-            (Position::new(GRID_WIDTH / 2, GRID_HEIGHT - 1), Direction::Down), // Bottom edge
+            (
+                Position::new(GRID_WIDTH - 1, GRID_HEIGHT / 2),
+                Direction::Right,
+            ), // Right edge
+            (Position::new(GRID_WIDTH / 2, 0), Direction::Up),    // Top edge
+            (
+                Position::new(GRID_WIDTH / 2, GRID_HEIGHT - 1),
+                Direction::Down,
+            ), // Bottom edge
         ];
 
         for (pos, direction) in test_cases {
             // Create a new game state with snake at edge
-            let snake = vec![pos, Position::new(pos.x, pos.y + 1), Position::new(pos.x, pos.y + 2)];
+            let snake = vec![
+                pos,
+                Position::new(pos.x, pos.y + 1),
+                Position::new(pos.x, pos.y + 2),
+            ];
             let mut test_game = GameState {
                 snake,
                 direction,
@@ -115,7 +131,10 @@ mod integration_tests {
 
             // Moving in the direction that would go out of bounds should end the game
             test_game.move_snake();
-            assert!(test_game.game_over, "Moving out of bounds should end the game");
+            assert!(
+                test_game.game_over,
+                "Moving out of bounds should end the game"
+            );
         }
     }
 
@@ -139,7 +158,7 @@ mod integration_tests {
         let initial_head = game.snake[0];
         game.move_snake();
         let new_head = game.snake[0];
-        
+
         // Snake should have moved right
         assert_eq!(new_head.x, initial_head.x + 1);
         assert_eq!(new_head.y, initial_head.y);
@@ -149,24 +168,24 @@ mod integration_tests {
     #[test]
     fn test_game_restart() {
         let mut game = GameState::new();
-        
+
         // Play for a bit
         for _ in 0..5 {
             game.move_snake();
         }
-        
+
         // Force game over
         game.game_over = true;
-        
+
         // Restart game
         let restarted_game = GameState::new();
-        
+
         // Verify game is in initial state
         assert_eq!(restarted_game.snake.len(), 3);
         assert_eq!(restarted_game.score, 0);
         assert!(!restarted_game.game_over);
         assert_eq!(restarted_game.direction, Direction::Right);
-        
+
         // Verify snake is centered
         let expected_head = Position::new(GRID_WIDTH / 2, GRID_HEIGHT / 2);
         assert_eq!(restarted_game.snake[0], expected_head);
@@ -182,10 +201,10 @@ mod integration_tests {
                 snake.push(Position::new(x, y));
             }
         }
-        
+
         // Remove one position to leave space for food
         snake.pop();
-        
+
         // This should not panic and should find a valid food position
         let food = GameState::generate_food_position(&snake);
         assert!(food.is_valid());
@@ -204,16 +223,16 @@ mod integration_tests {
             let head = game.snake[0];
             let food_pos = head.move_in_direction(game.direction);
             game.food = food_pos;
-            
+
             let speed_before = game.game_speed;
             game.move_snake();
-            
+
             // Speed should decrease (making game faster) or stay at minimum
             assert!(game.game_speed <= speed_before);
             assert!(game.game_speed <= previous_speed);
-            
+
             previous_speed = game.game_speed;
-            
+
             // Speed should never go below minimum
             assert!(game.game_speed >= 0.1);
         }
@@ -231,7 +250,7 @@ mod integration_tests {
             Position::new(3, 5),
             Position::new(4, 5), // tail
         ];
-        
+
         let mut game = GameState {
             snake,
             direction: Direction::Down, // This will make head collide with body at (5, 6)
@@ -256,7 +275,10 @@ mod test_helpers {
 
     /// Create a game state with snake in a specific configuration
     #[allow(dead_code)]
-    pub fn create_game_with_snake_positions(positions: Vec<Position>, direction: Direction) -> GameState {
+    pub fn create_game_with_snake_positions(
+        positions: Vec<Position>,
+        direction: Direction,
+    ) -> GameState {
         GameState {
             snake: positions.clone(),
             direction,
@@ -274,12 +296,15 @@ mod test_helpers {
     pub fn verify_game_invariants(game: &GameState) {
         // Snake should never be empty
         assert!(!game.snake.is_empty(), "Snake should never be empty");
-        
+
         // All snake segments should be valid
         for segment in &game.snake {
-            assert!(segment.is_valid(), "All snake segments should be valid positions");
+            assert!(
+                segment.is_valid(),
+                "All snake segments should be valid positions"
+            );
         }
-        
+
         // Snake segments should be adjacent
         for i in 1..game.snake.len() {
             let prev = game.snake[i - 1];
@@ -288,17 +313,20 @@ mod test_helpers {
             let y_diff = (prev.y - curr.y).abs();
             assert!(x_diff + y_diff == 1, "Snake segments should be adjacent");
         }
-        
+
         // Score should be non-negative
         // Score is u32, so it's always >= 0
-        
+
         // Game speed should be within reasonable bounds
         assert!(game.game_speed > 0.0, "Game speed should be positive");
         assert!(game.game_speed <= 1.0, "Game speed should not be too slow");
-        
+
         // Food should be valid and not on snake
         assert!(game.food.is_valid(), "Food should be in valid position");
-        assert!(!game.snake.contains(&game.food), "Food should not be on snake");
+        assert!(
+            !game.snake.contains(&game.food),
+            "Food should not be on snake"
+        );
     }
 
     /// Simulate a sequence of moves

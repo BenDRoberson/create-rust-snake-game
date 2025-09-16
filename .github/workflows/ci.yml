@@ -1,0 +1,348 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run maintenance checks daily at 2 AM
+    - cron: '0 2 * * *'
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  # Fast checks that run on every commit
+  quick-checks:
+    name: Quick Checks
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libasound2-dev libudev-dev libx11-dev libxrandr-dev libxi-dev libgl1-mesa-dev libxcursor-dev libxinerama-dev
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        components: rustfmt, clippy
+
+    - name: Cache cargo registry
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-quick-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Check formatting
+      run: cargo fmt --all -- --check
+
+    - name: Run clippy
+      run: cargo clippy --all-targets --all-features -- -D warnings
+
+    - name: Run unit tests
+      run: cargo test --lib
+
+    - name: Run integration tests
+      run: cargo test --test integration_tests
+
+    - name: Build check
+      run: cargo check --all-targets
+
+    - name: Check for TODO/FIXME comments
+      run: |
+        if grep -r "TODO\|FIXME" src/ --exclude-dir=target; then
+          echo "⚠️ Found TODO/FIXME comments. Consider addressing them before merging."
+        fi
+
+  # Comprehensive testing that runs on PRs and main branch
+  comprehensive-testing:
+    name: Comprehensive Testing
+    runs-on: ${{ matrix.os }}
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        rust: [stable, beta]
+        include:
+          # Test on stable for all platforms
+          - os: ubuntu-latest
+            rust: stable
+          - os: windows-latest
+            rust: stable
+          - os: macos-latest
+            rust: stable
+          # Test beta on Ubuntu only
+          - os: ubuntu-latest
+            rust: beta
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install system dependencies (Ubuntu only)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libasound2-dev libudev-dev libx11-dev libxrandr-dev libxi-dev libgl1-mesa-dev libxcursor-dev libxinerama-dev
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: ${{ matrix.rust }}
+        components: rustfmt, clippy
+
+    - name: Cache cargo registry
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-${{ matrix.rust }}-
+
+    - name: Check formatting
+      run: cargo fmt --all -- --check
+
+    - name: Run clippy
+      run: cargo clippy --all-targets --all-features -- -D warnings
+
+    - name: Run unit tests
+      run: cargo test --lib
+
+    - name: Run integration tests
+      run: cargo test --test integration_tests
+
+    - name: Run property-based tests
+      run: cargo test --features proptest
+
+    - name: Build release
+      run: cargo build --release
+
+  # Performance benchmarks - only on PRs and main
+  benchmark:
+    name: Performance Benchmarks
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libasound2-dev libudev-dev libx11-dev libxrandr-dev libxi-dev libgl1-mesa-dev libxcursor-dev libxinerama-dev
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        components: rustfmt, clippy
+
+    - name: Cache cargo registry
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-bench-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Run benchmarks
+      run: cargo bench
+
+    - name: Upload benchmark results
+      uses: actions/upload-artifact@v4
+      if: github.event_name == 'pull_request'
+      with:
+        name: benchmark-results
+        path: target/criterion/
+
+  # Security audit - on PRs and daily
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || github.event.schedule
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libasound2-dev libudev-dev libx11-dev libxrandr-dev libxi-dev libgl1-mesa-dev libxcursor-dev libxinerama-dev
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Install cargo-audit
+      run: cargo install cargo-audit
+
+    - name: Run security audit
+      run: cargo audit
+
+    - name: Check for known security issues
+      run: |
+        # Check for common security anti-patterns
+        if grep -r "unsafe" src/ --exclude-dir=target; then
+          echo "Found 'unsafe' code. Please review for security implications."
+        fi
+
+  # Test coverage - only on PRs
+  coverage:
+    name: Code Coverage
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libasound2-dev libudev-dev libx11-dev libxrandr-dev libxi-dev libgl1-mesa-dev libxcursor-dev libxinerama-dev
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Install cargo-tarpaulin
+      run: cargo install cargo-tarpaulin
+
+    - name: Generate coverage report
+      run: cargo tarpaulin --out Html --output-dir coverage --verbose
+
+    - name: Check coverage threshold
+      run: |
+        # Set minimum coverage threshold (adjust as needed)
+        COVERAGE_THRESHOLD=80
+        COVERAGE=$(cargo tarpaulin --out Xml | grep -o 'line-rate="[^"]*"' | cut -d'"' -f2 | head -1)
+        COVERAGE_PERCENT=$(echo "$COVERAGE * 100" | bc)
+        
+        if (( $(echo "$COVERAGE_PERCENT < $COVERAGE_THRESHOLD" | bc -l) )); then
+          echo "Coverage $COVERAGE_PERCENT% is below threshold $COVERAGE_THRESHOLD%"
+          exit 1
+        else
+          echo "Coverage $COVERAGE_PERCENT% meets threshold $COVERAGE_THRESHOLD%"
+        fi
+
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: coverage/
+
+  # Cross-platform builds - only on PRs and main
+  build-matrix:
+    name: Build for ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - os: macos-latest
+            target: x86_64-apple-darwin
+          - os: macos-latest
+            target: aarch64-apple-darwin
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install system dependencies (Ubuntu only)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libasound2-dev libudev-dev libx11-dev libxrandr-dev libxi-dev libgl1-mesa-dev libxcursor-dev libxinerama-dev
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        target: ${{ matrix.target }}
+
+    - name: Cache cargo registry
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Build for target
+      run: cargo build --release --target ${{ matrix.target }}
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: snake-game-${{ matrix.target }}
+        path: target/${{ matrix.target }}/release/create-rust-snake-game*
+
+  # Maintenance checks - only on schedule (daily)
+  maintenance:
+    name: Maintenance Checks
+    runs-on: ubuntu-latest
+    if: github.event.schedule
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libasound2-dev libudev-dev libx11-dev libxrandr-dev libxi-dev libgl1-mesa-dev libxcursor-dev libxinerama-dev
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Install maintenance tools
+      run: |
+        cargo install cargo-outdated
+        cargo install cargo-audit
+
+    - name: Check for outdated dependencies
+      run: cargo outdated --exit-code 1
+
+    - name: Check for duplicate dependencies
+      run: cargo tree --duplicates
+
+    - name: Run security audit
+      run: cargo audit
+
+    - name: Check documentation
+      run: cargo doc --no-deps --document-private-items
+
+    - name: Check for missing documentation
+      run: |
+        # Check that all public items have documentation
+        cargo doc --no-deps 2>&1 | grep -i "missing documentation" && exit 1 || true
+
+    - name: Create maintenance report
+      run: |
+        echo "## Daily Maintenance Report" > maintenance-report.md
+        echo "Date: $(date)" >> maintenance-report.md
+        echo "✅ Dependency check completed" >> maintenance-report.md
+        echo "✅ Security audit completed" >> maintenance-report.md
+        echo "✅ Documentation check completed" >> maintenance-report.md
+
+    - name: Upload maintenance report
+      uses: actions/upload-artifact@v4
+      with:
+        name: maintenance-report
+        path: maintenance-report.md

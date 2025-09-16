@@ -1,5 +1,5 @@
 //! Snake Game Library
-//! 
+//!
 //! This module contains the core game logic for the Snake game.
 //! It's structured as a library to enable comprehensive testing.
 
@@ -80,6 +80,12 @@ mod game {
         pub last_update: f64,
     }
 
+    impl Default for GameState {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
+
     impl GameState {
         pub fn new() -> Self {
             // Initialize snake in the center, moving right
@@ -106,11 +112,9 @@ mod game {
         pub fn generate_food_position(snake: &[Position]) -> Position {
             let mut rng = rand::thread_rng();
             loop {
-                let food: Position = Position::new(
-                    rng.gen_range(0..GRID_WIDTH),
-                    rng.gen_range(0..GRID_HEIGHT),
-                );
-                
+                let food: Position =
+                    Position::new(rng.gen_range(0..GRID_WIDTH), rng.gen_range(0..GRID_HEIGHT));
+
                 // Make sure food doesn't spawn on snake
                 if !snake.contains(&food) {
                     return food;
@@ -125,7 +129,7 @@ mod game {
             }
 
             let current_time: f64 = ctx.time.time_since_start().as_secs_f64();
-            
+
             // Only move snake if enough time has passed
             if current_time - self.last_update >= self.game_speed {
                 self.direction = self.next_direction;
@@ -160,7 +164,7 @@ mod game {
             if new_head == self.food {
                 self.score += 10;
                 self.food = Self::generate_food_position(&self.snake);
-                
+
                 // Increase game speed
                 self.game_speed = (self.game_speed * 0.95).max(0.1);
             } else {
@@ -208,7 +212,10 @@ mod game {
 
             // Draw score at the top
             let score_text = graphics::Text::new(format!("Score: {}", self.score));
-            canvas.draw(&score_text, graphics::DrawParam::default().dest([10.0, 10.0]));
+            canvas.draw(
+                &score_text,
+                graphics::DrawParam::default().dest([10.0, 10.0]),
+            );
 
             // Draw game over overlay if game is over
             if self.game_over {
@@ -220,7 +227,11 @@ mod game {
         }
 
         // Add a game overlay for when the game is over
-        fn draw_game_over_overlay(&self, ctx: &mut Context, canvas: &mut graphics::Canvas) -> GameResult {
+        fn draw_game_over_overlay(
+            &self,
+            ctx: &mut Context,
+            canvas: &mut graphics::Canvas,
+        ) -> GameResult {
             let screen_width = GRID_WIDTH as f32 * CELL_SIZE;
 
             // Create semi-transparent overlay covering the game area
@@ -236,10 +247,12 @@ mod game {
             // Create game over text
             // note TextFragment is basically a string (or substring) with formatting options
             // this confused me at first it seems redundant - but imagine you wanted two or more colors! duh
-            let game_over_text = Text::new(TextFragment::new("GAME OVER")
-                .color(Color::RED)
-                .scale(graphics::PxScale::from(48.0)));
-            
+            let game_over_text = Text::new(
+                TextFragment::new("GAME OVER")
+                    .color(Color::RED)
+                    .scale(graphics::PxScale::from(48.0)),
+            );
+
             let game_over_bounds = game_over_text.measure(ctx)?; // this is so cool btw. note: it returns a Rect!
             let game_over_x = (screen_width - game_over_bounds.x) / 2.0;
             let game_over_y = (GRID_HEIGHT as f32 * CELL_SIZE) / 2.0 - 80.0;
@@ -250,10 +263,12 @@ mod game {
             );
 
             // Create final score text - same thing basically
-            let final_score_text = Text::new(TextFragment::new(format!("Final Score: {}", self.score))
-                .color(Color::WHITE)
-                .scale(graphics::PxScale::from(24.0)));
-            
+            let final_score_text = Text::new(
+                TextFragment::new(format!("Final Score: {}", self.score))
+                    .color(Color::WHITE)
+                    .scale(graphics::PxScale::from(24.0)),
+            );
+
             let score_bounds = final_score_text.measure(ctx)?;
             let score_x = (screen_width - score_bounds.x) / 2.0;
             let score_y = game_over_y + 60.0; // just a bit below the game over text
@@ -264,10 +279,12 @@ mod game {
             );
 
             // Create restart instruction text
-            let restart_text = Text::new(TextFragment::new("Press Ctrl+R to restart")
-                .color(Color::YELLOW)
-                .scale(graphics::PxScale::from(18.0)));
-            
+            let restart_text = Text::new(
+                TextFragment::new("Press Ctrl+R to restart")
+                    .color(Color::YELLOW)
+                    .scale(graphics::PxScale::from(18.0)),
+            );
+
             let restart_bounds = restart_text.measure(ctx)?;
             let restart_x = (screen_width - restart_bounds.x) / 2.0;
             let restart_y = score_y + 50.0;
@@ -335,8 +352,8 @@ mod game {
 
 /// Run the snake game
 pub fn run_game() -> ggez::GameResult {
-    use ggez::{ContextBuilder, event};
-    
+    use ggez::{event, ContextBuilder};
+
     // Create ggez context
     let (ctx, event_loop) = ContextBuilder::new("snake_game", "ben!")
         .window_setup(ggez::conf::WindowSetup::default().title("Super Sick Snake Game"))
@@ -358,6 +375,7 @@ pub fn run_game() -> ggez::GameResult {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(feature = "proptest")]
     use proptest::prelude::*;
 
     // Unit tests for Direction
@@ -371,7 +389,12 @@ mod tests {
 
     #[test]
     fn test_direction_opposite_is_symmetric() {
-        for direction in [Direction::Up, Direction::Down, Direction::Left, Direction::Right] {
+        for direction in [
+            Direction::Up,
+            Direction::Down,
+            Direction::Left,
+            Direction::Right,
+        ] {
             assert_eq!(direction.opposite().opposite(), direction);
         }
     }
@@ -387,11 +410,17 @@ mod tests {
     #[test]
     fn test_position_move_in_direction() {
         let pos = Position::new(10, 10);
-        
+
         assert_eq!(pos.move_in_direction(Direction::Up), Position::new(10, 9));
-        assert_eq!(pos.move_in_direction(Direction::Down), Position::new(10, 11));
+        assert_eq!(
+            pos.move_in_direction(Direction::Down),
+            Position::new(10, 11)
+        );
         assert_eq!(pos.move_in_direction(Direction::Left), Position::new(9, 10));
-        assert_eq!(pos.move_in_direction(Direction::Right), Position::new(11, 10));
+        assert_eq!(
+            pos.move_in_direction(Direction::Right),
+            Position::new(11, 10)
+        );
     }
 
     #[test]
@@ -400,7 +429,7 @@ mod tests {
         assert!(Position::new(0, 0).is_valid());
         assert!(Position::new(GRID_WIDTH - 1, GRID_HEIGHT - 1).is_valid());
         assert!(Position::new(5, 5).is_valid());
-        
+
         // Invalid positions (out of bounds)
         assert!(!Position::new(-1, 5).is_valid());
         assert!(!Position::new(5, -1).is_valid());
@@ -413,27 +442,27 @@ mod tests {
     #[test]
     fn test_game_state_new() {
         let game = GameState::new();
-        
+
         // Check initial snake position (should be centered)
         let expected_head = Position::new(GRID_WIDTH / 2, GRID_HEIGHT / 2);
         assert_eq!(game.snake[0], expected_head);
-        
+
         // Check initial snake length (should be 3)
         assert_eq!(game.snake.len(), 3);
-        
+
         // Check initial direction
         assert_eq!(game.direction, Direction::Right);
         assert_eq!(game.next_direction, Direction::Right);
-        
+
         // Check initial score
         assert_eq!(game.score, 0);
-        
+
         // Check game is not over
         assert!(!game.game_over);
-        
+
         // Check food is not on snake
         assert!(!game.snake.contains(&game.food));
-        
+
         // Check food is within bounds
         assert!(game.food.is_valid());
     }
@@ -441,7 +470,7 @@ mod tests {
     #[test]
     fn test_would_collide_wall() {
         let game = GameState::new();
-        
+
         // Test wall collisions
         assert!(game.would_collide(Position::new(-1, 5)));
         assert!(game.would_collide(Position::new(GRID_WIDTH, 5)));
@@ -452,7 +481,7 @@ mod tests {
     #[test]
     fn test_would_collide_self() {
         let game = GameState::new();
-        
+
         // Test collision with snake body (excluding tail which will be removed)
         if game.snake.len() > 1 {
             let body_pos = game.snake[1];
@@ -464,7 +493,7 @@ mod tests {
     fn test_would_not_collide_valid_moves() {
         let game = GameState::new();
         let head = game.snake[0];
-        
+
         // Test valid moves (should not collide)
         let valid_moves = [
             head.move_in_direction(Direction::Up),
@@ -472,7 +501,7 @@ mod tests {
             head.move_in_direction(Direction::Left),
             head.move_in_direction(Direction::Right),
         ];
-        
+
         for pos in valid_moves {
             if pos.is_valid() {
                 // Only check if it's not colliding with snake body (excluding tail)
@@ -488,11 +517,11 @@ mod tests {
     fn test_handle_input_prevents_reversal() {
         let mut game = GameState::new();
         game.direction = Direction::Right;
-        
+
         // Try to reverse direction (should be ignored)
         game.handle_input(Direction::Left);
         assert_eq!(game.next_direction, Direction::Right); // Should not change
-        
+
         // Try valid direction change
         game.handle_input(Direction::Up);
         assert_eq!(game.next_direction, Direction::Up);
@@ -503,15 +532,15 @@ mod tests {
         let mut game = GameState::new();
         let initial_length = game.snake.len();
         let initial_score = game.score;
-        
+
         // Place food in front of snake head
         let head = game.snake[0];
         let food_pos = head.move_in_direction(game.direction);
         game.food = food_pos;
-        
+
         // Move snake (should eat food and grow)
         game.move_snake();
-        
+
         assert_eq!(game.snake.len(), initial_length + 1);
         assert_eq!(game.score, initial_score + 10);
         assert_ne!(game.food, food_pos); // Food should be regenerated
@@ -521,28 +550,28 @@ mod tests {
     fn test_snake_movement_without_food() {
         let mut game = GameState::new();
         let initial_length = game.snake.len();
-        
+
         // Ensure food is not in front of snake
         let head = game.snake[0];
         let _food_pos = head.move_in_direction(game.direction);
         game.food = Position::new(0, 0); // Place food elsewhere
-        
+
         // Move snake (should not eat food)
         game.move_snake();
-        
+
         assert_eq!(game.snake.len(), initial_length); // Length should stay same
     }
 
     #[test]
     fn test_game_over_on_collision() {
         let mut game = GameState::new();
-        
+
         // Force snake to move into a wall
         game.direction = Direction::Left;
         game.snake[0] = Position::new(0, GRID_HEIGHT / 2); // Place at left edge
-        
+
         game.move_snake();
-        
+
         assert!(game.game_over);
     }
 
@@ -550,21 +579,22 @@ mod tests {
     fn test_game_speed_increases_after_eating() {
         let mut game = GameState::new();
         let initial_speed = game.game_speed;
-        
+
         // Place food in front of snake head
         let head = game.snake[0];
         let food_pos = head.move_in_direction(game.direction);
         game.food = food_pos;
-        
+
         // Move snake to eat food
         game.move_snake();
-        
+
         // Game speed should increase (get smaller number = faster)
         assert!(game.game_speed < initial_speed);
     }
 
     // Property-based tests using proptest
-    proptest! {
+    #[cfg(feature = "proptest")]
+    proptest::proptest! {
         #[test]
         fn test_position_move_direction_property(
             x in 0..GRID_WIDTH,
@@ -573,11 +603,11 @@ mod tests {
         ) {
             let pos = Position::new(x, y);
             let moved_pos = pos.move_in_direction(direction);
-            
+
             // The moved position should differ by exactly 1 in one coordinate
             let x_diff = (moved_pos.x - pos.x).abs();
             let y_diff = (moved_pos.y - pos.y).abs();
-            
+
             assert!(x_diff + y_diff == 1, "Position should move exactly 1 unit in one direction");
         }
 
@@ -586,10 +616,10 @@ mod tests {
             direction in prop::sample::select(vec![Direction::Up, Direction::Down, Direction::Left, Direction::Right])
         ) {
             let opposite = direction.opposite();
-            
+
             // Opposite of opposite should be the original
             assert_eq!(opposite.opposite(), direction);
-            
+
             // Opposite should be different from original
             assert_ne!(opposite, direction);
         }
@@ -600,22 +630,22 @@ mod tests {
         ) {
             // Create a game state with a snake of specific length
             let mut game = GameState::new();
-            
+
             // Extend snake to desired length
             while game.snake.len() < snake_length {
                 let head = game.snake[0];
                 let new_head = head.move_in_direction(Direction::Right);
                 game.snake.insert(0, new_head);
             }
-            
+
             // Snake should maintain its length when moving without eating
             let initial_length = game.snake.len();
-            
+
             // Place food elsewhere so snake doesn't eat
             game.food = Position::new(0, 0);
-            
+
             game.move_snake();
-            
+
             assert_eq!(game.snake.len(), initial_length);
         }
     }
@@ -624,13 +654,13 @@ mod tests {
     #[test]
     fn test_full_game_flow() {
         let mut game = GameState::new();
-        
+
         // Simulate a few moves
         for _ in 0..5 {
             game.move_snake();
             assert!(!game.game_over); // Game should still be running
         }
-        
+
         // Check that snake has moved
         let initial_head = Position::new(GRID_WIDTH / 2, GRID_HEIGHT / 2);
         assert_ne!(game.snake[0], initial_head);
@@ -639,15 +669,15 @@ mod tests {
     #[test]
     fn test_game_state_consistency() {
         let game = GameState::new();
-        
+
         // Snake should never be empty
         assert!(!game.snake.is_empty());
-        
+
         // All snake segments should be valid positions
         for segment in &game.snake {
             assert!(segment.is_valid());
         }
-        
+
         // Snake segments should be adjacent (no gaps)
         for i in 1..game.snake.len() {
             let prev = game.snake[i - 1];
@@ -685,7 +715,7 @@ mod tests {
             Position::new(3, 5),
         ];
         let game = create_custom_game_state(snake.clone(), Direction::Right);
-        
+
         assert_eq!(game.snake, snake);
         assert_eq!(game.direction, Direction::Right);
         assert!(!game.snake.contains(&game.food));
