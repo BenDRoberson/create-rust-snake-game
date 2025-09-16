@@ -1,6 +1,6 @@
 use ggez::event::{self, EventHandler};
-use ggez::graphics::{self, Color, DrawMode, Mesh, Rect};
-use ggez::input::keyboard::{KeyCode, KeyInput};
+use ggez::graphics::{self, Color, DrawMode, Mesh, Rect, Text, TextFragment};
+use ggez::input::keyboard::{KeyCode, KeyInput, KeyMods};
 use ggez::{Context, ContextBuilder, GameResult};
 use rand::Rng;
 
@@ -127,13 +127,19 @@ impl GameState {
         Ok(())
     }
 
+    // Check if a position would cause a collision
+    fn would_collide(&self, new_head: Position) -> bool {
+        // check: not in a wall, in it's own body (minus the behind that's about to be removed)
+        !new_head.is_valid() || self.snake[..self.snake.len() - 1].contains(&new_head)
+    }
+
     // Move the snek
     fn move_snake(&mut self) {
         let head: Position = self.snake[0];
         let new_head: Position = head.move_in_direction(self.direction);
 
         // Check for collisions
-        if !new_head.is_valid() || self.snake.contains(&new_head) {
+        if self.would_collide(new_head) {
             self.game_over = true;
             return;
         }
@@ -191,11 +197,77 @@ impl GameState {
         let food_mesh = Mesh::new_rectangle(ctx, DrawMode::fill(), food_rect, Color::RED)?;
         canvas.draw(&food_mesh, graphics::DrawParam::default());
 
-        // Draw score
+        // Draw score at the top
         let score_text = graphics::Text::new(format!("Score: {}", self.score));
-        canvas.draw(&score_text, graphics::DrawParam::default());
+        canvas.draw(&score_text, graphics::DrawParam::default().dest([10.0, 10.0]));
+
+        // Draw game over overlay if game is over
+        if self.game_over {
+            self.draw_game_over_overlay(ctx, &mut canvas)?;
+        }
 
         canvas.finish(ctx)?;
+        Ok(())
+    }
+
+    // Add a game overlay for when the game is over
+    fn draw_game_over_overlay(&self, ctx: &mut Context, canvas: &mut graphics::Canvas) -> GameResult {
+        let screen_width = GRID_WIDTH as f32 * CELL_SIZE;
+
+        // Create semi-transparent overlay covering the game area
+        let overlay_rect = Rect::new(0.0, 0.0, screen_width, GRID_HEIGHT as f32 * CELL_SIZE);
+        let overlay_mesh = Mesh::new_rectangle(
+            ctx,
+            DrawMode::fill(),
+            overlay_rect,
+            Color::new(0.0, 0.0, 0.0, 0.7),
+        )?;
+        canvas.draw(&overlay_mesh, graphics::DrawParam::default());
+
+        // Create game over text
+        // note TextFragment is basically a string (or substring) with formatting options
+        // this confused me at first it seems redundant - but imagine you wanted two or more colors! duh
+        let game_over_text = Text::new(TextFragment::new("GAME OVER")
+            .color(Color::RED)
+            .scale(graphics::PxScale::from(48.0)));
+        
+        let game_over_bounds = game_over_text.measure(ctx)?; // this is so cool btw. note: it returns a Rect!
+        let game_over_x = (screen_width - game_over_bounds.x) / 2.0;
+        let game_over_y = (GRID_HEIGHT as f32 * CELL_SIZE) / 2.0 - 80.0;
+
+        canvas.draw(
+            &game_over_text,
+            graphics::DrawParam::default().dest([game_over_x, game_over_y]), // so easy to center text
+        );
+
+        // Create final score text - same thing basically
+        let final_score_text = Text::new(TextFragment::new(format!("Final Score: {}", self.score))
+            .color(Color::WHITE)
+            .scale(graphics::PxScale::from(24.0)));
+        
+        let score_bounds = final_score_text.measure(ctx)?;
+        let score_x = (screen_width - score_bounds.x) / 2.0;
+        let score_y = game_over_y + 60.0; // just a bit below the game over text
+
+        canvas.draw(
+            &final_score_text,
+            graphics::DrawParam::default().dest([score_x, score_y]),
+        );
+
+        // Create restart instruction text
+        let restart_text = Text::new(TextFragment::new("Press Ctrl+R to restart")
+            .color(Color::YELLOW)
+            .scale(graphics::PxScale::from(18.0)));
+        
+        let restart_bounds = restart_text.measure(ctx)?;
+        let restart_x = (screen_width - restart_bounds.x) / 2.0;
+        let restart_y = score_y + 50.0;
+
+        canvas.draw(
+            &restart_text,
+            graphics::DrawParam::default().dest([restart_x, restart_y]),
+        );
+
         Ok(())
     }
 }
@@ -219,20 +291,30 @@ impl EventHandler for GameState {
         if let Some(keycode) = key_input.keycode {
             match keycode {
                 KeyCode::Up | KeyCode::W => {
-                    self.handle_input(Direction::Up);
+                    if !self.game_over {
+                        self.handle_input(Direction::Up);
+                    }
                 }
                 KeyCode::Down | KeyCode::S => {
-                    self.handle_input(Direction::Down);
+                    if !self.game_over {
+                        self.handle_input(Direction::Down);
+                    }
                 }
                 KeyCode::Left | KeyCode::A => {
-                    self.handle_input(Direction::Left);
+                    if !self.game_over {
+                        self.handle_input(Direction::Left);
+                    }
                 }
                 KeyCode::Right | KeyCode::D => {
-                    self.handle_input(Direction::Right);
+                    if !self.game_over {
+                        self.handle_input(Direction::Right);
+                    }
                 }
                 KeyCode::R => {
-                    // Reset game
-                    *self = GameState::new();
+                    // Reset game with Ctrl+R or just R
+                    if key_input.mods.contains(KeyMods::CTRL) || !self.game_over {
+                        *self = GameState::new();
+                    }
                 }
                 _ => {}
             }
@@ -247,7 +329,7 @@ fn main() -> GameResult {
         .window_setup(ggez::conf::WindowSetup::default().title("Super Sick Snake Game"))
         .window_mode(ggez::conf::WindowMode::default().dimensions(
             GRID_WIDTH as f32 * CELL_SIZE,
-            GRID_HEIGHT as f32 * CELL_SIZE + 50.0, // Extra space for score
+            GRID_HEIGHT as f32 * CELL_SIZE,
         ))
         .build()?;
 
