@@ -152,7 +152,7 @@ jobs:
       run: cargo bench
 
     - name: Upload benchmark results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: github.event_name == 'pull_request'
       with:
         name: benchmark-results
@@ -218,7 +218,7 @@ jobs:
         fi
 
     - name: Upload coverage report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: coverage-report
         path: coverage/
@@ -262,7 +262,7 @@ jobs:
       run: cargo build --release --target ${{ matrix.target }}
 
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: snake-game-${{ matrix.target }}
         path: target/${{ matrix.target }}/release/create-rust-snake-game*
@@ -311,7 +311,7 @@ jobs:
         echo "✅ Documentation check completed" >> maintenance-report.md
 
     - name: Upload maintenance report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: maintenance-report
         path: maintenance-report.md
