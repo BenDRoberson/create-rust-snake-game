@@ -137,9 +137,11 @@ jobs:
 
     - name: Upload to Release
       run: |
-        gh release upload ${{ needs.create-release.outputs.version }} \
-          target/${{ matrix.target }}/release/create-rust-snake-game${{ matrix.target == 'x86_64-pc-windows-msvc' && '.exe' || '' }} \
-          --clobber
+        if [ "${{ matrix.os }}" = "windows-latest" ]; then
+          gh release upload ${{ needs.create-release.outputs.version }} target/${{ matrix.target }}/release/create-rust-snake-game.exe --clobber
+        else
+          gh release upload ${{ needs.create-release.outputs.version }} target/${{ matrix.target }}/release/create-rust-snake-game --clobber
+        fi
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -178,11 +180,19 @@ jobs:
         VERSION=${VERSION#v}
         sed -i "s/^version = \".*\"/version = \"$VERSION\"/" Cargo.toml
 
+    - name: Regenerate Cargo.lock
+      run: |
+        # Install Rust to ensure we can run cargo commands
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+        source ~/.cargo/env
+        # Regenerate Cargo.lock to ensure it's in sync with Cargo.toml
+        cargo update
+
     - name: Commit and push version update
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git add Cargo.toml
+        git add Cargo.toml Cargo.lock
         if git diff --staged --quiet; then
           echo "No changes to commit"
         else
