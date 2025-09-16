@@ -1,5 +1,44 @@
 # Snake Game
 
-building a snake game in rust - maybe some thoughts along the way about rust.
+[![CI](https://github.com/Bendroberson/create-rust-snake-game/workflows/CI/badge.svg)](https://github.com/Bendroberson/create-rust-snake-game/actions)
+[![Latest Release](https://img.shields.io/github/v/release/Bendroberson/create-rust-snake-game)](https://github.com/Bendroberson/create-rust-snake-game/releases)
 
-basically all testing done by an LLM, it was my first venture into trying Cursor. it vibe coded an insane amount of tests in no time at all. Now I feel like I will be ruined writing my own tests..
+A high-performance Snake game built in Rust with comprehensive testing and CI/CD automation.
+
+## Download and Play
+
+1. Go to the [Releases](https://github.com/Bendroberson/create-rust-snake-game/releases) page
+2. Download the binary for your platform
+3. Snake away
+
+### Build from Source
+
+```bash
+git clone https://github.com/Bendroberson/create-rust-snake-game.git
+cd create-rust-snake-game
+cargo run --release
+```
+
+## Controls
+
+- **Arrow Keys** or **WASD**: Move the snake
+- **R**: Restart the game
+- **ESC**: Quit the game
+
+## Development
+
+### Testing
+
+```bash
+# Run all tests
+cargo test
+
+# Run benchmarks
+cargo bench
+
+# Check code quality
+cargo clippy
+cargo fmt --check
+```
+
+See [TESTING_GUIDE.md](TESTING_GUIDE.md) for detailed testing information.
