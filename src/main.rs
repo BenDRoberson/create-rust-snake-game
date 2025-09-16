@@ -169,8 +169,11 @@ impl GameState {
         // Draw snake
         for segment in &self.snake {
             let rect = Rect::new(
+                // boy is this a bit weird, I'd have been stuck for ages without an LLM
+                // this is scaling the grid coordinates to the screen pixel coordinates (sounds obvious once you know it)
                 segment.x as f32 * CELL_SIZE,
                 segment.y as f32 * CELL_SIZE,
+                // - 2.0 to make the snake segments clearer
                 CELL_SIZE - 2.0,
                 CELL_SIZE - 2.0,
             );
