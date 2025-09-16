@@ -136,6 +136,7 @@ jobs:
       run: strip target/${{ matrix.target }}/release/create-rust-snake-game
 
     - name: Upload to Release
+      shell: bash
       run: |
         if [ "${{ matrix.os }}" = "windows-latest" ]; then
           gh release upload ${{ needs.create-release.outputs.version }} target/${{ matrix.target }}/release/create-rust-snake-game.exe --clobber
