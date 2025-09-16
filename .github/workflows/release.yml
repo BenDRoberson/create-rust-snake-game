@@ -14,6 +14,10 @@ on:
 env:
   CARGO_TERM_COLOR: always
 
+permissions:
+  contents: write
+  packages: write
+
 jobs:
   create-release:
     name: Create Release
@@ -37,14 +41,16 @@ jobs:
 
     - name: Create Release
       id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ steps.get_version.outputs.version }}
-        release_name: Snake Game ${{ steps.get_version.outputs.version }}
-        body: |
-          ## Snake Game ${{ steps.get_version.outputs.version }}
+      run: |
+        if [[ "${{ steps.get_version.outputs.version }}" == *"alpha"* ]] || [[ "${{ steps.get_version.outputs.version }}" == *"beta"* ]] || [[ "${{ steps.get_version.outputs.version }}" == *"rc"* ]]; then
+          PRERELEASE_FLAG="--prerelease"
+        else
+          PRERELEASE_FLAG=""
+        fi
+        
+        gh release create ${{ steps.get_version.outputs.version }} \
+          --title "Snake Game ${{ steps.get_version.outputs.version }}" \
+          --notes "## Snake Game ${{ steps.get_version.outputs.version }}
           
           ### What's New
           - Bug fixes and improvements
@@ -52,15 +58,15 @@ jobs:
           
           ### Downloads
           Choose the appropriate binary for your platform:
-          - **Windows**: `create-rust-snake-game.exe`
-          - **macOS (Intel)**: `create-rust-snake-game-x86_64-apple-darwin`
-          - **macOS (Apple Silicon)**: `create-rust-snake-game-aarch64-apple-darwin`
-          - **Linux**: `create-rust-snake-game-x86_64-unknown-linux-gnu`
+          - **Windows**: \`create-rust-snake-game.exe\`
+          - **macOS (Intel)**: \`create-rust-snake-game-x86_64-apple-darwin\`
+          - **macOS (Apple Silicon)**: \`create-rust-snake-game-aarch64-apple-darwin\`
+          - **Linux**: \`create-rust-snake-game-x86_64-unknown-linux-gnu\`
           
           ### Installation
           1. Download the binary for your platform
-          2. Make it executable (Linux/macOS): `chmod +x create-rust-snake-game-*`
-          3. Run: `./create-rust-snake-game-*` (or double-click on Windows)
+          2. Make it executable (Linux/macOS): \`chmod +x create-rust-snake-game-*\`
+          3. Run: \`./create-rust-snake-game-*\` (or double-click on Windows)
           
           ### Controls
           - **Arrow Keys**: Move the snake
@@ -72,9 +78,10 @@ jobs:
           - Unit tests: ✅ All passing
           - Integration tests: ✅ All passing
           - Property-based tests: ✅ All passing
-          - Performance benchmarks: ✅ No regressions
-        draft: false
-        prerelease: ${{ contains(steps.get_version.outputs.version, 'alpha') || contains(steps.get_version.outputs.version, 'beta') || contains(steps.get_version.outputs.version, 'rc') }}
+          - Performance benchmarks: ✅ No regressions" \
+          $PRERELEASE_FLAG
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-and-upload:
     name: Build and Upload ${{ matrix.target }}
@@ -122,14 +129,12 @@ jobs:
       run: strip target/${{ matrix.target }}/release/create-rust-snake-game
 
     - name: Upload to Release
-      uses: actions/upload-release-asset@v1
+      run: |
+        gh release upload ${{ needs.create-release.outputs.version }} \
+          target/${{ matrix.target }}/release/create-rust-snake-game${{ matrix.target == 'x86_64-pc-windows-msvc' && '.exe' || '' }} \
+          --clobber
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ needs.create-release.outputs.upload_url }}
-        asset_path: target/${{ matrix.target }}/release/create-rust-snake-game${{ matrix.target == 'x86_64-pc-windows-msvc' && '.exe' || '' }}
-        asset_name: ${{ matrix.artifact_name }}
-        asset_content_type: application/octet-stream
 
   update-cargo-toml:
     name: Update Cargo.toml Version
