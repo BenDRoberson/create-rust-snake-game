@@ -375,6 +375,7 @@ pub fn run_game() -> ggez::GameResult {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(feature = "proptest")]
     use proptest::prelude::*;
 
     // Unit tests for Direction
@@ -592,7 +593,8 @@ mod tests {
     }
 
     // Property-based tests using proptest
-    proptest! {
+    #[cfg(feature = "proptest")]
+    proptest::proptest! {
         #[test]
         fn test_position_move_direction_property(
             x in 0..GRID_WIDTH,

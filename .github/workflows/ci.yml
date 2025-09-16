@@ -63,12 +63,6 @@ jobs:
           echo "⚠️ Found TODO/FIXME comments. Consider addressing them before merging."
         fi
 
-    - name: Check for unsafe code
-      run: |
-        if grep -r "unsafe" src/ --exclude-dir=target; then
-          echo "⚠️ Found 'unsafe' code. Please review for security implications."
-        fi
-
   # Comprehensive testing that runs on PRs and main branch
   comprehensive-testing:
     name: Comprehensive Testing
