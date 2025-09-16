@@ -155,16 +155,21 @@ jobs:
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         fetch-depth: 0
+        ref: main
 
     - name: Get default branch
       id: get_branch
       run: |
-        DEFAULT_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@')
+        # Try to get the default branch from the repository
+        DEFAULT_BRANCH=$(gh repo view --json defaultBranchRef --jq '.defaultBranchRef.name' || echo "main")
         echo "branch=$DEFAULT_BRANCH" >> $GITHUB_OUTPUT
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Checkout default branch
       run: |
         git checkout ${{ steps.get_branch.outputs.branch }}
+        git pull origin ${{ steps.get_branch.outputs.branch }}
 
     - name: Update version in Cargo.toml
       run: |
@@ -178,5 +183,9 @@ jobs:
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git add Cargo.toml
-        git commit -m "Bump version to ${{ needs.create-release.outputs.version }}" || exit 0
-        git push origin ${{ steps.get_branch.outputs.branch }}
+        if git diff --staged --quiet; then
+          echo "No changes to commit"
+        else
+          git commit -m "Bump version to ${{ needs.create-release.outputs.version }}"
+          git push origin ${{ steps.get_branch.outputs.branch }}
+        fi
