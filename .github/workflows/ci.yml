@@ -169,11 +169,11 @@ jobs:
         name: benchmark-results
         path: target/criterion/
 
-  # Security audit - on PRs, daily, and manual dispatch
+  # Security audit - only on merge to main branch and daily schedule
   security:
     name: Security Audit
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' || github.event.schedule || github.event_name == 'workflow_dispatch'
+    if: (github.ref == 'refs/heads/main' && github.event_name == 'push') || github.event.schedule || github.event_name == 'workflow_dispatch'
 
     steps:
     - name: Checkout code
@@ -200,11 +200,11 @@ jobs:
           echo "Found 'unsafe' code. Please review for security implications."
         fi
 
-  # Test coverage - on PRs and manual dispatch
+  # Test coverage - only on merge to main branch
   coverage:
     name: Code Coverage
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
     steps:
     - name: Checkout code
