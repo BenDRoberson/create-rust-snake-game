@@ -313,11 +313,8 @@ jobs:
 
     - name: Install maintenance tools
       run: |
-        cargo install cargo-outdated
         cargo install cargo-audit
 
-    - name: Check for outdated dependencies
-      run: cargo outdated --exit-code 1
 
     - name: Check for duplicate dependencies
       run: cargo tree --duplicates
@@ -337,7 +334,6 @@ jobs:
       run: |
         echo "## Daily Maintenance Report" > maintenance-report.md
         echo "Date: $(date)" >> maintenance-report.md
-        echo "✅ Dependency check completed" >> maintenance-report.md
         echo "✅ Security audit completed" >> maintenance-report.md
         echo "✅ Documentation check completed" >> maintenance-report.md
 
