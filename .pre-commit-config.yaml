@@ -1,0 +1,41 @@
+repos:
+  # Rust formatting - automatically fixes formatting issues
+  - repo: https://github.com/doublify/pre-commit-rust
+    rev: v1.0
+    hooks:
+      - id: fmt
+        name: rustfmt
+        description: "Format Rust code using rustfmt"
+        entry: cargo fmt --all
+        language: system
+        types: [rust]
+        pass_filenames: false
+        always_run: true
+        # No --check flag - allows automatic formatting
+
+  # Rust linting with clippy
+  - repo: https://github.com/doublify/pre-commit-rust
+    rev: v1.0
+    hooks:
+      - id: clippy
+        name: clippy
+        description: "Lint Rust code using clippy"
+        entry: cargo clippy
+        language: system
+        types: [rust]
+        pass_filenames: false
+        always_run: true
+        args: ["--all-targets", "--all-features", "--", "-D", "warnings"]
+
+  # Basic file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: trailing-whitespace
+        description: "Remove trailing whitespace"
+      - id: end-of-file-fixer
+        description: "Ensure files end with a newline"
+      - id: check-merge-conflict
+        description: "Check for merge conflict markers"
+      - id: mixed-line-ending
+        description: "Check for mixed line endings"

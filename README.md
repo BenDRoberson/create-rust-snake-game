@@ -27,6 +27,21 @@ cargo run --release
 
 ## Development
 
+### Pre-commit Hooks
+
+This project uses pre-commit hooks to ensure code quality. To set up and use them:
+
+```bash
+# Install pre-commit hooks
+uvx pre-commit install
+
+# Run pre-commit on all files
+uvx pre-commit run --all-files
+
+# Or run pre-commit on staged files only
+uvx pre-commit run
+```
+
 ### Testing
 
 ```bash

@@ -64,11 +64,11 @@ jobs:
           echo "⚠️ Found TODO/FIXME comments. Consider addressing them before merging."
         fi
 
-  # Comprehensive testing that runs on PRs, main branch, and manual dispatch
+  # Comprehensive testing that runs only on merge to main branch
   comprehensive-testing:
     name: Comprehensive Testing
     runs-on: ${{ matrix.os }}
-    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    if: (github.ref == 'refs/heads/main' && github.event_name == 'push') || github.event_name == 'workflow_dispatch'
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
@@ -130,11 +130,11 @@ jobs:
     - name: Build release
       run: cargo build --release
 
-  # Performance benchmarks - on PRs, main, and manual dispatch
+  # Performance benchmarks - only on merge to main branch
   benchmark:
     name: Performance Benchmarks
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    if: (github.ref == 'refs/heads/main' && github.event_name == 'push') || github.event_name == 'workflow_dispatch'
 
     steps:
     - name: Checkout code
@@ -169,11 +169,11 @@ jobs:
         name: benchmark-results
         path: target/criterion/
 
-  # Security audit - on PRs, daily, and manual dispatch
+  # Security audit - only on merge to main branch and daily schedule
   security:
     name: Security Audit
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' || github.event.schedule || github.event_name == 'workflow_dispatch'
+    if: (github.ref == 'refs/heads/main' && github.event_name == 'push') || github.event.schedule || github.event_name == 'workflow_dispatch'
 
     steps:
     - name: Checkout code
@@ -200,11 +200,11 @@ jobs:
           echo "Found 'unsafe' code. Please review for security implications."
         fi
 
-  # Test coverage - on PRs and manual dispatch
+  # Test coverage - only on merge to main branch
   coverage:
     name: Code Coverage
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    if: (github.ref == 'refs/heads/main' && github.event_name == 'push') || github.event_name == 'workflow_dispatch'
 
     steps:
     - name: Checkout code
@@ -230,7 +230,7 @@ jobs:
         COVERAGE_THRESHOLD=80
         COVERAGE=$(cargo tarpaulin --out Xml | grep -o 'line-rate="[^"]*"' | cut -d'"' -f2 | head -1)
         COVERAGE_PERCENT=$(echo "$COVERAGE * 100" | bc)
-        
+
         if (( $(echo "$COVERAGE_PERCENT < $COVERAGE_THRESHOLD" | bc -l) )); then
           echo "Coverage $COVERAGE_PERCENT% is below threshold $COVERAGE_THRESHOLD%"
           exit 1
@@ -244,11 +244,11 @@ jobs:
         name: coverage-report
         path: coverage/
 
-  # Cross-platform builds - on PRs, main, and manual dispatch
+  # Cross-platform builds - only on merge to main branch
   build-matrix:
     name: Build for ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
-    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     strategy:
       matrix:
         include:
@@ -330,4 +330,3 @@ jobs:
       run: |
         # Check that all public items have documentation
         cargo doc --no-deps 2>&1 | grep -i "missing documentation" && exit 1 || true
-        

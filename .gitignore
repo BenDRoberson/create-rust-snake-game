@@ -14,3 +14,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+#high score
+high_score.txt

@@ -124,6 +124,7 @@ mod integration_tests {
                 next_direction: direction,
                 food: Position::new(5, 5), // Place food away from edge
                 score: 0,
+                high_score: 0,
                 game_over: false,
                 game_speed: 0.2,
                 last_update: 0.0,
@@ -257,6 +258,7 @@ mod integration_tests {
             next_direction: Direction::Down,
             food: Position::new(0, 0),
             score: 0,
+            high_score: 0,
             game_over: false,
             game_speed: 0.2,
             last_update: 0.0,
@@ -285,6 +287,7 @@ mod test_helpers {
             next_direction: direction,
             food: GameState::generate_food_position(&positions),
             score: 0,
+            high_score: 0,
             game_over: false,
             game_speed: 0.2,
             last_update: 0.0,
