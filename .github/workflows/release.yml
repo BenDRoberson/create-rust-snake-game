@@ -39,22 +39,6 @@ jobs:
           echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
         fi
 
-    - name: Install git-cliff
-      run: |
-        # Download git-cliff using the direct release URL
-        curl -L -o git-cliff.tar.gz https://github.com/orhun/git-cliff/releases/download/v2.10.0/git-cliff-2.10.0-x86_64-unknown-linux-gnu.tar.gz
-        tar -xzf git-cliff.tar.gz
-        # Find the git-cliff binary in the extracted directory
-        find . -name "git-cliff" -type f -executable | head -1 | xargs -I {} sudo mv {} /usr/local/bin/
-        rm -rf git-cliff-* git-cliff.tar.gz
-
-    - name: Update CHANGELOG.md with git-cliff
-      id: update_changelog
-      run: |
-        # Generate the full changelog using git-cliff
-        git-cliff --output CHANGELOG.md
-        
-        echo "Updated CHANGELOG.md with git-cliff"
 
     - name: Create Release
       id: create_release
@@ -162,7 +146,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   update-cargo-toml:
-    name: Update Cargo.toml Version
+    name: Update Cargo.toml Version and CHANGELOG
     runs-on: ubuntu-latest
     needs: create-release
     if: github.event_name == 'push'
@@ -188,6 +172,21 @@ jobs:
       run: |
         git checkout ${{ steps.get_branch.outputs.branch }}
         git pull origin ${{ steps.get_branch.outputs.branch }}
+
+    - name: Install git-cliff
+      run: |
+        # Download git-cliff using the direct release URL
+        curl -L -o git-cliff.tar.gz https://github.com/orhun/git-cliff/releases/download/v2.10.0/git-cliff-2.10.0-x86_64-unknown-linux-gnu.tar.gz
+        tar -xzf git-cliff.tar.gz
+        # Find the git-cliff binary in the extracted directory
+        find . -name "git-cliff" -type f -executable | head -1 | xargs -I {} sudo mv {} /usr/local/bin/
+        rm -rf git-cliff-* git-cliff.tar.gz
+
+    - name: Update CHANGELOG.md with git-cliff
+      run: |
+        # Generate the full changelog using git-cliff
+        git-cliff --output CHANGELOG.md
+        echo "Updated CHANGELOG.md with git-cliff"
 
     - name: Update version in Cargo.toml
       run: |
