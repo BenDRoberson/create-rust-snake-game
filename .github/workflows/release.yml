@@ -44,8 +44,9 @@ jobs:
         # Download git-cliff using the direct release URL
         curl -L -o git-cliff.tar.gz https://github.com/orhun/git-cliff/releases/download/v2.10.0/git-cliff-2.10.0-x86_64-unknown-linux-gnu.tar.gz
         tar -xzf git-cliff.tar.gz
-        sudo mv git-cliff /usr/local/bin/
-        rm git-cliff.tar.gz
+        # Find the git-cliff binary in the extracted directory
+        find . -name "git-cliff" -type f -executable | head -1 | xargs -I {} sudo mv {} /usr/local/bin/
+        rm -rf git-cliff-* git-cliff.tar.gz
 
     - name: Update CHANGELOG.md with git-cliff
       id: update_changelog
