@@ -48,30 +48,30 @@ jobs:
         else
           PRERELEASE_FLAG=""
         fi
-        
+
         gh release create ${{ steps.get_version.outputs.version }} \
           --title "Snake Game ${{ steps.get_version.outputs.version }}" \
           --notes "## Snake Game ${{ steps.get_version.outputs.version }}
-          
+
           📋 **For detailed changes, see the [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)**
-          
+
           ### Downloads
           Choose the appropriate binary for your platform:
           - **Windows**: \`create-rust-snake-game.exe\`
           - **macOS (Intel)**: \`create-rust-snake-game-x86_64-apple-darwin\`
           - **macOS (Apple Silicon)**: \`create-rust-snake-game-aarch64-apple-darwin\`
           - **Linux**: \`create-rust-snake-game-x86_64-unknown-linux-gnu\`
-          
+
           ### Installation
           1. Download the binary for your platform
           2. Make it executable (Linux/macOS): \`chmod +x create-rust-snake-game-*\`
           3. Run: \`./create-rust-snake-game-*\` (or double-click on Windows)
-          
+
           ### Controls
           - **Arrow Keys**: Move the snake
           - **ESC**: Quit the game
           - **R**: Restart the game
-          
+
           ### Performance
           This release includes comprehensive performance optimizations and has been tested with:
           - Unit tests: ✅ All passing

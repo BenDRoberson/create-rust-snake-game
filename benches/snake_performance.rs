@@ -109,6 +109,7 @@ fn benchmark_collision_detection(c: &mut Criterion) {
             next_direction: Direction::Right,
             food: Position::new(5, 5),
             score: 0,
+            high_score: 0,
             game_over: false,
             game_speed: 0.2,
             last_update: 0.0,
@@ -149,6 +150,7 @@ fn benchmark_snake_movement(c: &mut Criterion) {
             next_direction: Direction::Right,
             food: Position::new(0, 0), // Place food away from snake
             score: 0,
+            high_score: 0,
             game_over: false,
             game_speed: 0.2,
             last_update: 0.0,
@@ -191,6 +193,7 @@ fn benchmark_snake_growth(c: &mut Criterion) {
                         next_direction: Direction::Right,
                         food: Position::new(0, 0), // Place food away from snake
                         score: 0,
+                        high_score: 0,
                         game_over: false,
                         game_speed: 0.2,
                         last_update: 0.0,
@@ -293,6 +296,7 @@ fn benchmark_edge_case_scenarios(c: &mut Criterion) {
                     next_direction: direction,
                     food: Position::new(5, 5),
                     score: 0,
+                    high_score: 0,
                     game_over: false,
                     game_speed: 0.2,
                     last_update: 0.0,

@@ -230,7 +230,7 @@ jobs:
         COVERAGE_THRESHOLD=80
         COVERAGE=$(cargo tarpaulin --out Xml | grep -o 'line-rate="[^"]*"' | cut -d'"' -f2 | head -1)
         COVERAGE_PERCENT=$(echo "$COVERAGE * 100" | bc)
-        
+
         if (( $(echo "$COVERAGE_PERCENT < $COVERAGE_THRESHOLD" | bc -l) )); then
           echo "Coverage $COVERAGE_PERCENT% is below threshold $COVERAGE_THRESHOLD%"
           exit 1
@@ -330,4 +330,3 @@ jobs:
       run: |
         # Check that all public items have documentation
         cargo doc --no-deps 2>&1 | grep -i "missing documentation" && exit 1 || true
-        

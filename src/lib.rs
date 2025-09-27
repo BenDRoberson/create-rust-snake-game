@@ -134,7 +134,7 @@ mod game {
                     } else {
                         trimmed.parse().unwrap_or(0)
                     }
-                },
+                }
                 Err(_) => 0, // File doesn't exist or can't be read, start with 0
             }
         }
@@ -797,7 +797,7 @@ mod tests {
         let mut game = GameState::new();
         game.score = 100;
         game.high_score = 50;
-        
+
         game.update_high_score();
         assert_eq!(game.high_score, 100);
     }
@@ -807,7 +807,7 @@ mod tests {
         let mut game = GameState::new();
         game.score = 30;
         game.high_score = 50;
-        
+
         game.update_high_score();
         assert_eq!(game.high_score, 50); // Should not change
     }
