@@ -1,3 +1,19 @@
+## [1.0.3] - 2025-09-27
+
+### 🚀 Features
+
+- Add high score tracking
+- Adding pre-commit hooks for linting/formatting
+
+### 🐛 Bug Fixes
+
+- Ci bug where certain jobs won't run on manual kickoff
+- Don't build images on manual ci run
+
+### ⚙️ Miscellaneous Tasks
+
+- Only run quick tests on pr
+- Only run code coverage and security audit on merge
 ## [1.0.2] - 2025-09-27
 
 ### ⚙️ Miscellaneous Tasks
