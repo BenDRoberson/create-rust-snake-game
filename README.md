@@ -3,7 +3,7 @@
 [![CI](https://github.com/Bendroberson/create-rust-snake-game/workflows/CI/badge.svg)](https://github.com/Bendroberson/create-rust-snake-game/actions)
 [![Latest Release](https://img.shields.io/github/v/release/Bendroberson/create-rust-snake-game)](https://github.com/Bendroberson/create-rust-snake-game/releases)
 
-A high-performance Snake game built in Rust with comprehensive testing and CI/CD automation.
+A high-performance Snake game built in Rust with comprehensive testing and CI/CD automation. Highly vibe coded - using this to learn some rust and play around with LLMs.
 
 ## Download and Play
 
