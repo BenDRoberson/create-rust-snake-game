@@ -1,10 +1,25 @@
-# Changelog
+## [1.0.2] - 2025-09-27
 
-All notable changes to this project will be documented in this file.
+### ⚙️ Miscellaneous Tasks
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+- Commit CHANGLOG.md on new release
+## [1.0.1] - 2025-09-27
 
+### 🚀 Features
+
+- Initial changelog version
+
+### 📚 Documentation
+
+- README update about robot usage
+
+### ⚙️ Miscellaneous Tasks
+
+- Remove depenency checks because thats overkill
+- Add workflow_dispatch trigger to CI workflow
+- Enable all CI jobs on manual workflow dispatch
+- Update release.yml to install git-cliff correctly
+- Fix git-cliff download in release
 ## [1.0.0] - 2025-09-16
 
 ### 🚀 Features
