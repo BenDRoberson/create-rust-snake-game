@@ -39,6 +39,22 @@ jobs:
           echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
         fi
 
+    - name: Install git-cliff
+      run: |
+        # Download git-cliff using the direct release URL
+        curl -L -o git-cliff.tar.gz https://github.com/orhun/git-cliff/releases/download/v2.10.0/git-cliff-2.10.0-x86_64-unknown-linux-gnu.tar.gz
+        tar -xzf git-cliff.tar.gz
+        sudo mv git-cliff /usr/local/bin/
+        rm git-cliff.tar.gz
+
+    - name: Update CHANGELOG.md with git-cliff
+      id: update_changelog
+      run: |
+        # Generate the full changelog using git-cliff
+        git-cliff --output CHANGELOG.md
+        
+        echo "Updated CHANGELOG.md with git-cliff"
+
     - name: Create Release
       id: create_release
       run: |
@@ -52,9 +68,7 @@ jobs:
           --title "Snake Game ${{ steps.get_version.outputs.version }}" \
           --notes "## Snake Game ${{ steps.get_version.outputs.version }}
           
-          ### What's New
-          - Bug fixes and improvements
-          - Performance optimizations
+          📋 **For detailed changes, see the [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md)**
           
           ### Downloads
           Choose the appropriate binary for your platform:
@@ -193,10 +207,10 @@ jobs:
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git add Cargo.toml Cargo.lock
+        git add Cargo.toml Cargo.lock CHANGELOG.md
         if git diff --staged --quiet; then
           echo "No changes to commit"
         else
-          git commit -m "Bump version to ${{ needs.create-release.outputs.version }}"
+          git commit -m "Bump version to ${{ needs.create-release.outputs.version }} and update CHANGELOG.md"
           git push origin ${{ steps.get_branch.outputs.branch }}
         fi
