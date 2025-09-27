@@ -64,11 +64,11 @@ jobs:
           echo "⚠️ Found TODO/FIXME comments. Consider addressing them before merging."
         fi
 
-  # Comprehensive testing that runs on PRs and main branch
+  # Comprehensive testing that runs on PRs, main branch, and manual dispatch
   comprehensive-testing:
     name: Comprehensive Testing
     runs-on: ${{ matrix.os }}
-    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
@@ -130,11 +130,11 @@ jobs:
     - name: Build release
       run: cargo build --release
 
-  # Performance benchmarks - only on PRs and main
+  # Performance benchmarks - on PRs, main, and manual dispatch
   benchmark:
     name: Performance Benchmarks
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
 
     steps:
     - name: Checkout code
@@ -169,11 +169,11 @@ jobs:
         name: benchmark-results
         path: target/criterion/
 
-  # Security audit - on PRs and daily
+  # Security audit - on PRs, daily, and manual dispatch
   security:
     name: Security Audit
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' || github.event.schedule
+    if: github.event_name == 'pull_request' || github.event.schedule || github.event_name == 'workflow_dispatch'
 
     steps:
     - name: Checkout code
@@ -200,11 +200,11 @@ jobs:
           echo "Found 'unsafe' code. Please review for security implications."
         fi
 
-  # Test coverage - only on PRs
+  # Test coverage - on PRs and manual dispatch
   coverage:
     name: Code Coverage
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
 
     steps:
     - name: Checkout code
@@ -244,11 +244,11 @@ jobs:
         name: coverage-report
         path: coverage/
 
-  # Cross-platform builds - only on PRs and main
+  # Cross-platform builds - on PRs, main, and manual dispatch
   build-matrix:
     name: Build for ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
-    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
     strategy:
       matrix:
         include:
@@ -294,11 +294,11 @@ jobs:
         name: snake-game-${{ matrix.target }}
         path: target/${{ matrix.target }}/release/create-rust-snake-game*
 
-  # Maintenance checks - only on schedule (daily)
+  # Maintenance checks - on schedule (daily) and manual dispatch
   maintenance:
     name: Maintenance Checks
     runs-on: ubuntu-latest
-    if: github.event.schedule
+    if: github.event.schedule || github.event_name == 'workflow_dispatch'
 
     steps:
     - name: Checkout code
